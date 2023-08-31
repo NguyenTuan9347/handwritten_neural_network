@@ -1,7 +1,7 @@
 from mnist import MNIST
 import numpy as np;
 def initWeight():
-    w = [np.empty((784,32),dtype=np.float64),np.empty((32,16),dtype=np.float64),np.empty((16,10),dtype=np.float64)]
+    w = [np.empty((784,16),dtype=np.float64),np.empty((16,16),dtype=np.float64),np.empty((16,10),dtype=np.float64)]
     for i in range(0,len(w)):
         for j in range(0,w[i].shape[0]):
             for k in range(0,w[i].shape[1]):
@@ -70,7 +70,7 @@ def train():
     alpha = 0.05
     iteration = 0;
     size = 0;
-    while(iteration <10 ):
+    while(iteration < 5 ):
         for i in range(0, len(train_images)):
             layer_input = train_images[i].flatten();
             layer_input = normalize(layer_input);
@@ -99,10 +99,57 @@ def train():
             w = [w0,w1,w2];
             if(np.fabs(train_labels[i] - max_num) == 0):
                 counter +=1;
-            print(counter/(size+1));
+            print(str(size) + ' : ' + str(counter/(size+1)));
             size += 1;
         iteration += 1;
-    #print(number=(counter*1.0/train_images.shape[0]));
+    with open("filename.txt", "w") as file:
+        for i in range(0,len(w)):
+            for j in range(0,len(w[i])):
+                for k in w[i][j]:
+                    file.write(str(k) + '\n');
+     
+
     
 
-train();
+#train();
+
+
+
+def test(w):
+    mndata = MNIST('samples');
+    np.random.seed();
+    counter = 0;
+    test_images, test_labels = mndata.load_testing();
+    test_images = np.array(test_images);
+    test_labels = np.array(test_labels);
+    size = 0;
+    for i in range(0, len(test_images)):
+        layer_input = test_images[i].flatten();
+        layer_input = normalize(layer_input);
+        layer_1 = layer_input @ w[0];
+        for j in range(0, layer_1.shape[0]):
+            layer_1[j] = sigmoid(layer_1[j]);
+        layer_2 = layer_1 @ w[1];
+        for j in range(0, layer_2.shape[0]):
+            layer_2[j] = sigmoid(layer_2[j]);
+        layer_output = layer_2 @ w[2];
+        layer_output = softmax(layer_output);
+        max_num = 0;
+        for j in range(0,len(layer_output)):
+            if(layer_output[max_num] < layer_output[j]):
+                max_num = j;
+        if(np.fabs(test_labels[i] - max_num) == 0):
+            counter +=1;
+        print(str(size) + ' : ' + str(counter/(size+1)));
+        size += 1;
+
+
+w = [np.empty((784,16),dtype=np.float64),np.empty((16,16),dtype=np.float64),np.empty((16,10),dtype=np.float64)];
+
+with open('filename.txt','r') as f:
+    for i in range(0,len(w)):
+        for j in range(0,len(w[i])):
+            for k in range(0,len(w[i][j])):
+                w[i][j][k] = np.float64(f.readline());
+
+test(w);
